@@ -54,7 +54,7 @@ from write import write_to_csv, write_to_json
 PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
 
 DATA_ROOT = PROJECT_ROOT / 'data'
-print(PROJECT_ROOT, DATA_ROOT)
+
 # The current time, for use with the kill-on-change feature of the interactive shell.
 _START = time.time()
 
@@ -386,8 +386,6 @@ def main():
     database = NEODatabase(load_neos(args.neofile), load_approaches(args.cadfile))
 
     # Run the chosen subcommand.
-    
-    print(args)
     
     if args.cmd == 'inspect':
         inspect(database, pdes=args.pdes, name=args.name, verbose=args.verbose)

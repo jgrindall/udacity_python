@@ -27,8 +27,6 @@ def load_neos(neo_csv_path):
     
     neos = []
     
-    print(neo_csv_path)
-    
     with open(neo_csv_path, encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for line in reader:
@@ -43,5 +41,13 @@ def load_approaches(cad_json_path):
     :param neo_csv_path: A path to a JSON file containing data about close approaches.
     :return: A collection of `CloseApproach`es.
     """
-    # TODO: Load close approach data from the given JSON file.
-    return ()
+    
+    approaches = []
+        
+    with open(cad_json_path, encoding='utf-8') as f:
+        response = json.load(f)
+        
+        for data in response["data"]:
+            approach = CloseApproach.fromData(data)
+            approaches.append(approach)
+    return approaches

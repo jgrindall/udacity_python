@@ -36,6 +36,7 @@ class NearEarthObject:
     # If you make changes, be sure to update the comments in this file.
     def __init__(self, **info):
         """Create a new `NearEarthObject`.
+        
 
         :param info: A dictionary of excess keyword arguments supplied to the constructor.
         """
@@ -44,13 +45,22 @@ class NearEarthObject:
         # You should coerce these values to their appropriate data type and
         # handle any edge cases, such as a empty name being represented by `None`
         # and a missing diameter being represented by `float('nan')`.
+        
         self.designation = info.get('designation')
         self.name = info.get('name', "(None)")
-        self.diameter = float ( info.get('diameter', 'nan') )
-        self.hazardous = False
+        
+        try:
+            self.diameter = float ( info.get('diameter') )
+        except ValueError as error:
+            self.diameter = None
+            
+        self.hazardous = (info.get('hazardous', '') == 'Y')
 
         # Create an empty initial collection of linked approaches.
         self.approaches = []
+        
+    def add_approach(self, approach):
+        self.approaches.append(approach)
 
     @property
     def fullname(self):
@@ -72,8 +82,7 @@ class NearEarthObject:
                 
     @staticmethod
     def fromData(line):
-        print(line)
-        return NearEarthObject()
+        return NearEarthObject(designation = line['pdes'], name = line['name'], diameter = line['diameter'], hazardous = line['pha'])
 
 
 class CloseApproach:
@@ -100,10 +109,11 @@ class CloseApproach:
         # onto attributes named `_designation`, `time`, `distance`, and `velocity`.
         # You should coerce these values to their appropriate data type and handle any edge cases.
         # The `cd_to_datetime` function will be useful.
-        self._designation = ''
-        self.time = cd_to_datetime(info.get('cd'))  # TODO: Use the cd_to_datetime function for this attribute.
-        self.distance = 0.0
-        self.velocity = 0.0
+        
+        self._designation = info.get('designation')
+        self.time = cd_to_datetime(info.get('cd'))
+        self.distance = float(info.get('dist'))
+        self.velocity = float(info.get('v_rel'))
 
         # Create an attribute for the referenced NEO, originally None.
         self.neo = None
@@ -125,7 +135,11 @@ class CloseApproach:
         # build a formatted representation of the approach time.
         # TODO: Use self.designation and self.name to build a fullname for this object.
         return ''
-
+        
+    @property
+    def designation(self):
+        return self._designation
+        
     def __str__(self):
         """Return `str(self)`."""
         # TODO: Use this object's attributes to return a human-readable string representation.
@@ -137,3 +151,8 @@ class CloseApproach:
         """Return `repr(self)`, a computer-readable string representation of this object."""
         return (f"CloseApproach(time={self.time_str!r}, distance={self.distance:.2f}, "
                 f"velocity={self.velocity:.2f}, neo={self.neo!r})")
+                
+                
+    @staticmethod
+    def fromData(line):
+        return CloseApproach(designation = line[0], cd = line[3], dist = line[4], v_rel = line[7])
