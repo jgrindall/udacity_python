@@ -54,7 +54,7 @@ class AttributeFilter:
 
     def __call__(self, approach):
         _value = self.get(approach)
-        print('call', self.op, self.value, _value)
+        #print('call', self.op, self.value, _value, ' -> ', self.op(self.get(approach), self.value))
         """Invoke `self(approach)`."""
         return self.op(self.get(approach), self.value)
 
@@ -77,17 +77,80 @@ class AttributeFilter:
 
 
 class MatchDateFilter(AttributeFilter):
-    def __init__(self, op, value):
-        super().__init__(op, value)
+    def __init__(self, value):
+        super().__init__(operator.eq, value)
     
     @classmethod
     def get(cls, approach):
-        print('match date get', str(approach), approach.time)
-        return approach.time
+        #print('match date get', str(approach), approach.time)
+        return approach.time.date()
+        
+class BeforeDateFilter(AttributeFilter):
+    def __init__(self, value):
+        super().__init__(operator.le, value)
+        
+    @classmethod
+    def get(cls, approach):
+        #print('match date get', str(approach), approach.time)
+        return approach.time.date()
+
+
+
+class AfterDateFilter(AttributeFilter):
+    def __init__(self, value):
+        super().__init__(operator.ge, value)
+        
+    @classmethod
+    def get(cls, approach):
+        #print('match date get', str(approach), approach.time)
+        return approach.time.date()
+
+
+        
+class ApproachDistFilter(AttributeFilter):
+    def __init__(self, value):
+        super().__init__(operator.ge, value)
+        
+    @classmethod
+    def get(cls, approach):
+        #print('match date get', str(approach), approach.time)
+        return approach.time.date()
+
+
+class ApproachVelocityFilter(AttributeFilter):
+    def __init__(self, value):
+        super().__init__(operator.ge, value)
+        
+    @classmethod
+    def get(cls, approach):
+        #print('match date get', str(approach), approach.time)
+        return approach.time.date()
+
+
+class DiameterFilter(AttributeFilter):
+    def __init__(self, value):
+        super().__init__(operator.ge, value)
+        
+    @classmethod
+    def get(cls, approach):
+        #print('match date get', str(approach), approach.time)
+        return approach.time.date()
+
+class HazardousFilter(AttributeFilter):
+    def __init__(self, value):
+        super().__init__(operator.eq, value)
+        
+    @classmethod
+    def get(cls, approach):
+        #print('match date get', str(approach), approach.time)
+        return approach.time.date()
         
         
-        
-        
+Approaches Earth at a distance of at least (or at most) X astrononical units.
+Approaches Earth at a relative velocity of at least (or at most) Y kilometers per second.
+Has a diameter that is at least as large as (or at least as small as) Z kilometers.
+Is marked by NASA as potentially hazardous (or not).
+
 
 def create_filters(date=None, start_date=None, end_date=None,
                    distance_min=None, distance_max=None,
@@ -125,8 +188,11 @@ def create_filters(date=None, start_date=None, end_date=None,
     """
     # TODO: Decide how you will represent your filters.
     filters = [ ]
+    
+    print(date, type(date))
+    
     if date:
-        filter = MatchDateFilter(operator.eq, date)
+        filter = MatchDateFilter(date)
         filters.append(filter)
     return filters
 

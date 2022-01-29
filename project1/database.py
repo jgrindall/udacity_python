@@ -67,7 +67,7 @@ class NEODatabase:
             approach.neo = corresponding_neo
             corresponding_neo.add_approach(approach)
             
-           
+        print('Built...\n')
             
 
     def get_neo_by_designation(self, designation):
