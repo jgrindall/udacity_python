@@ -27,11 +27,15 @@ def load_neos(neo_csv_path):
     
     neos = []
     
+    print("Loading " + str(neo_csv_path))
+    
     with open(neo_csv_path, encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for line in reader:
             neo = NearEarthObject.fromData(line)
             neos.append(neo)
+    
+    print("Loaded")
     return neos
 
 
@@ -43,6 +47,8 @@ def load_approaches(cad_json_path):
     """
     
     approaches = []
+    
+    print("Loading " + str(cad_json_path))
         
     with open(cad_json_path, encoding='utf-8') as f:
         response = json.load(f)
@@ -50,4 +56,6 @@ def load_approaches(cad_json_path):
         for data in response["data"]:
             approach = CloseApproach.fromData(data)
             approaches.append(approach)
-    return approaches
+    
+    print("Loaded")
+    return approaches[:5000]

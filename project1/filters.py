@@ -53,11 +53,14 @@ class AttributeFilter:
         self.value = value
 
     def __call__(self, approach):
+        _value = self.get(approach)
+        print('call', self.op, self.value, _value)
         """Invoke `self(approach)`."""
         return self.op(self.get(approach), self.value)
 
     @classmethod
     def get(cls, approach):
+
         """Get an attribute of interest from a close approach.
 
         Concrete subclasses must override this method to get an attribute of
@@ -71,6 +74,20 @@ class AttributeFilter:
     def __repr__(self):
         return f"{self.__class__.__name__}(op=operator.{self.op.__name__}, value={self.value})"
 
+
+
+class MatchDateFilter(AttributeFilter):
+    def __init__(self, op, value):
+        super().__init__(op, value)
+    
+    @classmethod
+    def get(cls, approach):
+        print('match date get', str(approach), approach.time)
+        return approach.time
+        
+        
+        
+        
 
 def create_filters(date=None, start_date=None, end_date=None,
                    distance_min=None, distance_max=None,
@@ -107,7 +124,11 @@ def create_filters(date=None, start_date=None, end_date=None,
     :return: A collection of filters for use with `query`.
     """
     # TODO: Decide how you will represent your filters.
-    return ()
+    filters = [ ]
+    if date:
+        filter = MatchDateFilter(operator.eq, date)
+        filters.append(filter)
+    return filters
 
 
 def limit(iterator, n=None):

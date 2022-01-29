@@ -1,3 +1,6 @@
+import sys
+import math
+
 """A database encapsulating collections of near-Earth objects and their close approaches.
 
 A `NEODatabase` holds an interconnected data set of NEOs and close approaches.
@@ -51,16 +54,20 @@ class NEODatabase:
         
         n = 0
         
+        total = len(approaches)
+        
         for approach in approaches:
             n+=1
-            if n % 5000 == 0:
-                print(n)
+            if n % 1000 == 0:
+                percent = math.ceil(100*n/total)
+                msg = "Loading " + str(percent) + "%"
+                sys.stdout.write('\r'+msg)
+
             corresponding_neo = self.get_neo_by_designation(approach.designation)
             approach.neo = corresponding_neo
             corresponding_neo.add_approach(approach)
             
-            
-            
+           
             
 
     def get_neo_by_designation(self, designation):
@@ -124,5 +131,16 @@ class NEODatabase:
         :return: A stream of matching `CloseApproach` objects.
         """
         # TODO: Generate `CloseApproach` objects that match all of the filters.
-        for approach in self._approaches:
+        
+        
+        print(filters)
+        
+        approaches = self._approaches
+        
+        for filter_func in filters:
+            approaches = filter(filter_func, approaches)
+        
+        approaches = list(approaches)
+        
+        for approach in approaches[:10]:
             yield approach
