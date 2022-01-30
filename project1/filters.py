@@ -1,3 +1,5 @@
+import math
+
 """Provide filters for querying close approaches and limit the generated results.
 
 The `create_filters` function produces a collection of objects that is used by
@@ -53,9 +55,12 @@ class AttributeFilter:
         self.value = value
 
     def __call__(self, approach):
-        _value = self.get(approach)
-        #print('call', self.op, self.value, _value, ' -> ', self.op(self.get(approach), self.value))
         """Invoke `self(approach)`."""
+
+        _value = self.get(approach)
+        #if the value is missing, it always fails the filter
+        if _value is None:
+            return False
         return self.op(self.get(approach), self.value)
 
     @classmethod
@@ -117,7 +122,7 @@ class HazardousFilter(AttributeFilter):
         
     @classmethod
     def get(cls, approach):
-        #print('hazardous get', str(approach), approach.hazardous)
+        #print('hazardous get', str(approach), approach.neo.hazardous)
         return approach.neo.hazardous
 
 
@@ -177,6 +182,7 @@ def create_filters(date=None, start_date=None, end_date=None,
     if diameter_max:
         filters.append(DiameterFilter(operator.le, diameter_max))
     if hazardous == True or hazardous == False:
+        #this filter is always "eq"
         filters.append(HazardousFilter(hazardous))
     return filters
 
@@ -190,15 +196,18 @@ def limit(iterator, n=None):
     :param n: The maximum number of values to produce.
     :yield: The first (at most) `n` values from the iterator.
     """
-    # TODO: Produce at most `n` values from the given iterator.
 
-    if n == 0 or n == None:
-        return list(iterator)
-    else:
-        for _ in range(n):
-            try:
-                item = next(iterator)
-                yield item
-            except StopIteration:
-                 break
+    #can use itertools too
 
+    iterator = iter(iterator)
+
+    max_count = math.inf if (n is 0 or n is None) else (n - 1)
+
+    count = 0
+    while count <= max_count:
+        try:
+            count += 1
+            item = next(iterator)
+        except StopIteration:
+             break
+        yield item

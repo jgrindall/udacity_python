@@ -1,4 +1,5 @@
 from datetime import datetime
+import math
 
 """Represent models for near-Earth objects and their close approaches.
 
@@ -59,28 +60,21 @@ class NearEarthObject:
     def __init__(self, designation, name = None, diameter = float('nan'), hazardous = False):
 
         """Create a new `NearEarthObject`.
-
         :param designation: string [required]
-        :param name: string or None
-        :diameter designation: float
+        :param name: non-empty string or None
+        :diameter designation: float (possibly nan)
         :param hazardous: boolean
-
         """
-        # TODO: Assign information from the arguments passed to the constructor
-        # onto attributes named `designation`, `name`, `diameter`, and `hazardous`.
-        # You should coerce these values to their appropriate data type and
-        # handle any edge cases, such as a empty name being represented by `None`
-        # and a missing diameter being represented by `float('nan')`.
 
         if not designation:
             raise TypeError("Missing designation")
-
         else:
             self.designation = designation
 
         self.name = (name if name else None)
 
         try:
+            # diameter must be a float (possibly nan)
             self.diameter = float (diameter)
         except ValueError as error:
             self.diameter = None
@@ -102,7 +96,7 @@ class NearEarthObject:
     def __str__(self):
         """Return `str(self)`."""
         pretty_print_hazardous = "is potentially hazardous" if self.hazardous else "is not potentially hazardous"
-        return f"A NearEarthObject: {self.fullname!r} which has diameter {self.diameter:.3f}au and {pretty_print_hazardous}"
+        return f"A NearEarthObject: {self.fullname!r} which has diameter {self.diameter:.3f}km and {pretty_print_hazardous}"
 
     def __repr__(self):
         """Return `repr(self)`, a computer-readable string representation of this object."""
@@ -110,11 +104,14 @@ class NearEarthObject:
                 f"diameter={self.diameter:.3f}, hazardous={self.hazardous!r})")
                 
     @staticmethod
-    def fromData(line):
-        pha = line.get('pha', '').upper()
-        designation = line.get('pdes', '')
-        name = line.get('name', None)
-        diameter = line.get('diameter', float('nan'))
+    def fromData(data):
+        """static factory method for making a neo from data in json file"""
+        designation = data.get('pdes', '')
+        name = data.get('name', None)
+        diameter = data.get('diameter', float('nan'))
+        if not diameter:
+            diameter = float('nan')
+        pha = data.get('pha', '').upper()
         hazardous = (pha == "Y")
         return NearEarthObject(designation = designation, name = name, diameter = diameter, hazardous = hazardous)
 
@@ -137,22 +134,17 @@ class CloseApproach:
     def __init__(self, designation, time, distance, velocity):
         """Create a new `CloseApproach`.
 
-        :param designation: designation (string)
-        :param time: time (float)
-        :param distance: distance (float)
-        :param velocity: velocity (float)
+        :param designation: designation (string, required)
+        :param time: time of closest approach to Earth (datetime)
+        :param distance: distance of closest approach to Earth in AU (float)
+        :param velocity: velocity of closest approach to Earth in km/s (float)
 
         """
-        # TODO: Assign information from the arguments passed to the constructor
-        # onto attributes named `_designation`, `time`, `distance`, and `velocity`.
-        # You should coerce these values to their appropriate data type and handle any edge cases.
-        # The `cd_to_datetime` function will be useful.
 
         if not designation:
             raise TypeError("Missing designation")
-
         else:
-            self.designation = designation
+            self._designation = designation
 
         self.time = time if isinstance(time, datetime) else datetime(time)
         self.distance = float(distance)
@@ -160,6 +152,10 @@ class CloseApproach:
 
         # Create an attribute for the referenced NEO, originally None.
         self.neo = None
+
+    @property
+    def designation(self):
+        return self._designation
 
     @property
     def time_str(self):
@@ -180,19 +176,92 @@ class CloseApproach:
         
     def __str__(self):
         """Return `str(self)`."""
-        # TODO: Use this object's attributes to return a human-readable string representation.
-        # The project instructions include one possibility. Peek at the __repr__
-        # method for examples of advanced string formatting.
         pretty_print_neo = self.neo.fullname if self.neo else "unknown"
         pretty_print_hazardous = "hazardous" if (self.neo and self.neo.hazardous) else "non-hazardous"
-        return f"A {pretty_print_hazardous} CloseApproach of the object {pretty_print_neo} at time {self.time}, at a closest approach distance of {self.distance:.2f}au and a velocity of {self.velocity:.2f}km/s"
+        return (f"A {pretty_print_hazardous} CloseApproach of the object {pretty_print_neo} at time {self.time}, "
+                f"at a closest approach distance of {self.distance:.2f}au and a velocity of {self.velocity:.2f}km/s")
 
     def __repr__(self):
         """Return `repr(self)`, a computer-readable string representation of this object."""
         return (f"CloseApproach(time={self.time_str!r}, distance={self.distance:.2f}, "
                 f"velocity={self.velocity:.2f}, neo={self.neo!r})")
-                
+
+    def serialize_json(self):
+        """
+
+             'datetime_utc', 'distance_au', 'velocity_km_s' to the associated values on the CloseApproach object and the key neo to a dictionary
+
+             mapping the keys 'designation', 'name', 'diameter_km', 'potentially_hazardous' to the associated values on the close approach's NEO.
+
+            As an example, consider the (same) CloseApproach when the NEO Eros approaches Earth on 2025-11-30 02:18. For this close approach, the corresponding entry would be:
+
+            [
+              {...},
+              {
+                "datetime_utc": "2025-11-30 02:18",
+                "distance_au": 0.397647483265833,
+                "velocity_km_s": 3.72885069167641,
+                "neo": {
+                  "designation": "433",
+                  "name": "Eros",
+                  "diameter_km": 16.84,
+                  "potentially_hazardous": false
+                }
+              },
+              ...
+            ]
+            The datetime_utc value should be a string formatted with datetime_to_str from the helpers module; the distance_au and
+
+             velocity_km_s values should be floats; the designation and name should be strings (if the name is missing, it must
+
+             be the empty string); the diameter_km should be a float (if the diameter_km is missing, it should be the JSON value NaN,
+
+             which Python's json loader successfully rehydrates as float('nan')); and potentially_hazardous should be a boolean
+
+              (i.e. the JSON literals false or true, not the strings 'False' nor 'True').
+          """
+
+        neo = {
+            "designation": self._designation,
+            "name": self.neo.name if self.neo.name else "",
+            "diameter_km": self.neo.diameter, #encoded in JSON as
+            "potentially_hazardous": self.neo.hazardous
+        }
+
+        return {
+            "datetime_utc":self.time_str,
+            "distance_au": self.distance,
+            "velocity_km_s": self.velocity,
+            "neo":neo
+        }
+
+    def serialize_csv(self):
+
+        """As an example, consider the CloseApproach when the NEO Eros approaches Earth on 2025-11-30 02:18. For this close approach, the corresponding row would be:
+
+        datetime_utc,distance_au,velocity_km_s,designation,name,diameter_km,potentially_hazardous
+        ...
+        2025-11-30 02:18,0.397647483265833,3.72885069167641,433,Eros,16.84,False
+        ...
+        A missing name must be represented in the CSV output by the empty string (not the string 'None').
+
+         A missing diameter must be represented in the CSV output either by the empty string or by the string 'nan'.
+
+         The potentially_hazardous flag must be represented in the CSV output either by the string 'False' or the string 'True' (not the values 0 or 1, nor the strings 'N' or 'Y').
+
+         """
+
+        return {
+            "datetime_utc": self.time_str,
+            "distance_au":str(self.distance),
+            "velocity_km_s":str(self.velocity),
+            "designation":self._designation,
+            "name":self.neo.name if self.neo.name else "",
+            "diameter_km":"" if math.isnan(self.neo.diameter) else str(self.neo.diameter),
+            "potentially_hazardous":"True" if self.neo.hazardous == True else "False"
+        }
                 
     @staticmethod
     def fromData(data):
+        """static factory method for making a close approach from csv data in file"""
         return CloseApproach(designation = data[0], time = cd_to_datetime(data[3]), distance = float(data[4]), velocity = float(data[7]))

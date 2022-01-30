@@ -52,12 +52,10 @@ class NEODatabase:
 
             
     def load(self):
-        print('Building database...')
         for approach in self._approaches:
             corresponding_neo = self.get_neo_by_designation(approach.designation)
             approach.neo = corresponding_neo
             corresponding_neo.add_approach(approach)
-        print('Built...\n')
 
 
     def get_neo_by_designation(self, designation):

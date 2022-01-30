@@ -1,2 +1,9 @@
 project1/_pycache_
 project1/__pycache__
+project1/output.json
+project1/output.csv
+
+project1/tests/_pycache_
+project1/tests/__pycache__
+
+

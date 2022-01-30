@@ -41,6 +41,7 @@ class TestLimit(unittest.TestCase):
         self.assertEqual(tuple(limit(iter(self.iterable), 0)), (0, 1, 2, 3, 4))
         self.assertEqual(tuple(limit(iter(self.iterable), None)), (0, 1, 2, 3, 4))
 
+
     def test_limit_produces_an_iterable(self):
         self.assertIsInstance(limit(self.iterable, 3), collections.abc.Iterable)
         self.assertIsInstance(limit(self.iterable, 5), collections.abc.Iterable)

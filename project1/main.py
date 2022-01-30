@@ -192,7 +192,7 @@ def inspect(database, pdes=None, name=None, verbose=False):
     print(neo)
     if verbose:
         for approach in neo.approaches:
-            print(f"- {approach}")
+            print(f"\t - {approach}")
     return neo
 
 

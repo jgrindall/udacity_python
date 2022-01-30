@@ -62,7 +62,6 @@ class TestLoadNEOs(unittest.TestCase):
     def test_asclepius_has_name_no_diameter(self):
         self.assertIn('4581', self.neos_by_designation)
         neo = self.neos_by_designation['4581']
-
         self.assertEqual(neo.designation, '4581')
         self.assertEqual(neo.name, 'Asclepius')
         self.assertTrue(math.isnan(neo.diameter))
