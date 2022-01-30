@@ -224,8 +224,8 @@ class CloseApproach:
         neo = {
             "designation": self._designation,
             "name": self.neo.name if self.neo.name else "",
-            "diameter_km": self.neo.diameter, #encoded in JSON as
-            "potentially_hazardous": self.neo.hazardous
+            "diameter_km": self.neo.diameter, #encoded in JSON as NaN if diameter is float('nan')
+            "potentially_hazardous": self.neo.hazardous #encoded in JSON as true/false
         }
 
         return {
