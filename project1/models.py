@@ -55,9 +55,8 @@ class NearEarthObject:
     initialized to an empty collection, but eventually populated in the
     `NEODatabase` constructor.
     """
-    # TODO: How can you, and should you, change the arguments to this constructor?
-    # If you make changes, be sure to update the comments in this file.
-    def __init__(self, designation, name = None, diameter = float('nan'), hazardous = False):
+
+    def __init__(self, designation, name=None, diameter=float('nan'), hazardous=False):
 
         """Create a new `NearEarthObject`.
         :param designation: string [required]
@@ -75,15 +74,15 @@ class NearEarthObject:
 
         try:
             # diameter must be a float (possibly nan)
-            self.diameter = float (diameter)
+            self.diameter = float(diameter)
         except ValueError as error:
             self.diameter = None
-            
+
         self.hazardous = bool(hazardous)
 
         # Create an empty initial collection of linked approaches.
         self.approaches = []
-        
+
     def add_approach(self, approach):
         self.approaches.append(approach)
 
@@ -102,7 +101,7 @@ class NearEarthObject:
         """Return `repr(self)`, a computer-readable string representation of this object."""
         return (f"NearEarthObject(designation={self.designation!r}, name={self.name!r}, "
                 f"diameter={self.diameter:.3f}, hazardous={self.hazardous!r})")
-                
+
     @staticmethod
     def fromData(data):
         """static factory method for making a neo from data in json file"""
@@ -113,7 +112,7 @@ class NearEarthObject:
             diameter = float('nan')
         pha = data.get('pha', '').upper()
         hazardous = (pha == "Y")
-        return NearEarthObject(designation = designation, name = name, diameter = diameter, hazardous = hazardous)
+        return NearEarthObject(designation=designation, name=name, diameter=diameter, hazardous=hazardous)
 
 
 class CloseApproach:
@@ -129,8 +128,7 @@ class CloseApproach:
     private attribute, but the referenced NEO is eventually replaced in the
     `NEODatabase` constructor.
     """
-    # TODO: How can you, and should you, change the arguments to this constructor?
-    # If you make changes, be sure to update the comments in this file.
+
     def __init__(self, designation, time, distance, velocity):
         """Create a new `CloseApproach`.
 
@@ -173,7 +171,6 @@ class CloseApproach:
 
         return datetime_to_str(self.time)
 
-        
     def __str__(self):
         """Return `str(self)`."""
         pretty_print_neo = self.neo.fullname if self.neo else "unknown"
@@ -224,15 +221,15 @@ class CloseApproach:
         neo = {
             "designation": self._designation,
             "name": self.neo.name if self.neo.name else "",
-            "diameter_km": self.neo.diameter, #encoded in JSON as NaN if diameter is float('nan')
-            "potentially_hazardous": self.neo.hazardous #encoded in JSON as true/false
+            "diameter_km": self.neo.diameter,  # encoded in JSON as NaN if diameter is float('nan')
+            "potentially_hazardous": self.neo.hazardous  # encoded in JSON as true/false
         }
 
         return {
-            "datetime_utc":self.time_str,
+            "datetime_utc": self.time_str,
             "distance_au": self.distance,
             "velocity_km_s": self.velocity,
-            "neo":neo
+            "neo": neo
         }
 
     def serialize_csv(self):
@@ -253,15 +250,15 @@ class CloseApproach:
 
         return {
             "datetime_utc": self.time_str,
-            "distance_au":str(self.distance),
-            "velocity_km_s":str(self.velocity),
-            "designation":self._designation,
-            "name":self.neo.name if self.neo.name else "",
-            "diameter_km":"" if math.isnan(self.neo.diameter) else str(self.neo.diameter),
-            "potentially_hazardous":"True" if self.neo.hazardous == True else "False"
+            "distance_au": str(self.distance),
+            "velocity_km_s": str(self.velocity),
+            "designation": self._designation,
+            "name": self.neo.name if self.neo.name else "",
+            "diameter_km": "" if math.isnan(self.neo.diameter) else str(self.neo.diameter),
+            "potentially_hazardous": "True" if self.neo.hazardous is True else "False"
         }
-                
+
     @staticmethod
     def fromData(data):
         """static factory method for making a close approach from csv data in file"""
-        return CloseApproach(designation = data[0], time = cd_to_datetime(data[3]), distance = float(data[4]), velocity = float(data[7]))
+        return CloseApproach(designation=data[0], time=cd_to_datetime(data[3]), distance=float(data[4]), velocity=float(data[7]))

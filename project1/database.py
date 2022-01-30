@@ -1,7 +1,8 @@
 import sys
 import math
 
-"""A database encapsulating collections of near-Earth objects and their close approaches.
+"""A database encapsulating collections
+of near-Earth objects and their close approaches.
 
 A `NEODatabase` holds an interconnected data set of NEOs and close approaches.
 It provides methods to fetch an NEO by primary designation or by name, as well
@@ -15,6 +16,7 @@ data on NEOs and close approaches extracted by `extract.load_neos` and
 You'll edit this file in Tasks 2 and 3.
 """
 
+
 class NEODatabase:
     """A database of near-Earth objects and their close approaches.
 
@@ -26,16 +28,16 @@ class NEODatabase:
     def __init__(self, neos, approaches):
         """Create a new `NEODatabase`.
 
-        As a precondition, this constructor assumes that the collections of NEOs
+        As a precondition, this constructor assumes that the NEOs
         and close approaches haven't yet been linked - that is, the
         `.approaches` attribute of each `NearEarthObject` resolves to an empty
         collection, and the `.neo` attribute of each `CloseApproach` is None.
 
         However, each `CloseApproach` has an attribute (`._designation`) that
         matches the `.designation` attribute of the corresponding NEO. This
-        constructor modifies the supplied NEOs and close approaches to link them
+        constructor modifies the NEOs and close approaches to link them
         together - after it's done, the `.approaches` attribute of each NEO has
-        a collection of that NEO's close approaches, and the `.neo` attribute of
+        a collection of that NEOs close approaches, and the .neo attribute of
         each close approach references the appropriate NEO.
 
         :param neos: A collection of `NearEarthObject`s.
@@ -43,20 +45,20 @@ class NEODatabase:
         """
         self._neos = neos
         self._approaches = approaches
-        self._lookup = {} #map pdes to neo
+
+        # map pdes to neo
+        self._lookup = {}
 
         for neo in self._neos:
             self._lookup[neo.designation] = neo
 
         self.load()
 
-            
     def load(self):
         for approach in self._approaches:
             corresponding_neo = self.get_neo_by_designation(approach.designation)
             approach.neo = corresponding_neo
             corresponding_neo.add_approach(approach)
-
 
     def get_neo_by_designation(self, designation):
         """Find and return an NEO by its primary designation.
@@ -74,7 +76,6 @@ class NEODatabase:
 
         return self._lookup.get(designation, None)
 
-
     def get_neo_by_name(self, name):
         """Find and return an NEO by its name.
 
@@ -89,12 +90,12 @@ class NEODatabase:
         :param name: The name, as a string, of the NEO to search for.
         :return: The `NearEarthObject` with the desired name, or `None`.
         """
-        
+
         if not name:
             return None
-            
+
         matches = filter(lambda neo: neo.name == name, self._neos)
-        
+
         return next(matches, None)
 
     def query(self, filters=()):
@@ -113,7 +114,7 @@ class NEODatabase:
         """
 
         approaches = self._approaches
-        
+
         for filter_func in filters:
             approaches = filter(filter_func, approaches)
 

@@ -1,6 +1,7 @@
 import math
 
-"""Provide filters for querying close approaches and limit the generated results.
+"""
+Provide filters for querying close approaches and limit the generated results.
 
 The `create_filters` function produces a collection of objects that is used by
 the `query` method to generate a stream of `CloseApproach` objects that match
@@ -10,8 +11,8 @@ the main module and originate from the user's command-line options.
 This function can be thought to return a collection of instances of subclasses
 of `AttributeFilter` - a 1-argument callable (on a `CloseApproach`) constructed
 from a comparator (from the `operator` module), a reference value, and a class
-method `get` that subclasses can override to fetch an attribute of interest from
-the supplied `CloseApproach`.
+method `get` that subclasses can override
+to fetch an attribute of interest from the supplied `CloseApproach`.
 
 The `limit` function simply limits the maximum number of values produced by an
 iterator.
@@ -58,7 +59,7 @@ class AttributeFilter:
         """Invoke `self(approach)`."""
 
         _value = self.get(approach)
-        #if the value is missing, it always fails the filter
+        # if the value is missing, it always fails the filter
         if _value is None:
             return False
         return self.op(self.get(approach), self.value)
@@ -79,50 +80,61 @@ class AttributeFilter:
     def __repr__(self):
         return f"{self.__class__.__name__}(op=operator.{self.op.__name__}, value={self.value})"
 
+
 class DateFilter(AttributeFilter):
+    """filter by date (before or after using le and ge)"""
+
     def __init__(self, op, value):
         super().__init__(op, value)
-        
+
     @classmethod
     def get(cls, approach):
-        #print('date get', str(approach), approach.time)
-        #convert to pure date to match on the day, ignoring the time
+        # print('date get', str(approach), approach.time)
+        # convert to pure date to match on the day, ignoring the time
         return approach.time.date()
 
+
 class DistFilter(AttributeFilter):
+    """filter by distance (min or max using le and ge)"""
     def __init__(self, op, value):
         super().__init__(op, value)
-        
+
     @classmethod
     def get(cls, approach):
-        #print('dist get', str(approach), approach.distance)
+        # print('dist get', str(approach), approach.distance)
         return approach.distance
 
+
 class ApproachVelocityFilter(AttributeFilter):
+    """filter by velocity (min or max using le and ge)"""
     def __init__(self, op, value):
         super().__init__(op, value)
-        
+
     @classmethod
     def get(cls, approach):
-        #print('vel get', str(approach), approach.velocity)
+        # print('vel get', str(approach), approach.velocity)
         return approach.velocity
 
+
 class DiameterFilter(AttributeFilter):
+    """filter by diameter (min or max using le and ge)"""
     def __init__(self, op, value):
         super().__init__(op, value)
-        
+
     @classmethod
     def get(cls, approach):
-        #print('diam', str(approach), approach.neo.diameter)
+        # print('diam', str(approach), approach.neo.diameter)
         return approach.neo.diameter
 
+
 class HazardousFilter(AttributeFilter):
+    """filter by hazardous (Y/N using eq and values True/False)"""
     def __init__(self, value):
         super().__init__(operator.eq, value)
-        
+
     @classmethod
     def get(cls, approach):
-        #print('hazardous get', str(approach), approach.neo.hazardous)
+        # print('hazardous get', str(approach), approach.neo.hazardous)
         return approach.neo.hazardous
 
 
@@ -161,8 +173,8 @@ def create_filters(date=None, start_date=None, end_date=None,
     :return: A collection of filters for use with `query`.
     """
 
-    filters = [ ]
-    
+    filters = []
+
     if date:
         filters.append(DateFilter(operator.eq, date))
     if start_date:
@@ -181,8 +193,8 @@ def create_filters(date=None, start_date=None, end_date=None,
         filters.append(DiameterFilter(operator.ge, diameter_min))
     if diameter_max:
         filters.append(DiameterFilter(operator.le, diameter_max))
-    if hazardous == True or hazardous == False:
-        #this filter is always "eq"
+    if hazardous is True or hazardous is False:
+        # this filter is always "eq"
         filters.append(HazardousFilter(hazardous))
     return filters
 
@@ -197,7 +209,7 @@ def limit(iterator, n=None):
     :yield: The first (at most) `n` values from the iterator.
     """
 
-    #can use itertools too
+    # can use itertools too
 
     iterator = iter(iterator)
 
@@ -209,5 +221,5 @@ def limit(iterator, n=None):
             count += 1
             item = next(iterator)
         except StopIteration:
-             break
+            break
         yield item
