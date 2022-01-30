@@ -1,3 +1,5 @@
+from datetime import datetime
+
 """Represent models for near-Earth objects and their close approaches.
 
 The `NearEarthObject` class represents a near-Earth object. Each has a unique
@@ -15,7 +17,27 @@ The functions that construct these objects use information extracted from the
 data files from NASA, so these objects should be able to handle all of the
 quirks of the data set, such as missing names and unknown diameters.
 
-You'll edit this file in Task 1.
+
+
+
+The `designation` should resolve to a string, the `name` should resolve to either a nonempty string or the value `None`, the `diameter` should resolve to a float (you should use `float('nan')` to represent an undefined diameter), and the `hazardous` flag should resolve to a boolean.
+
+The `approaches` attribute, for now, can be an empty collection. In Task 2, you'll use the real data set to populate this collection with the real `CloseApproach` data.
+
+The `__str__` method that you write is up to you - it'll determine how this object is printed, and should be human-readable. For inspiration, we adopted the following format:
+
+```
+>>> neo = ...
+>>> print(neo)
+NEO {fullname} has a diameter of {diameter:.3f} km and [is/is not] potentially hazardous.
+>>> halley = ...
+>>> print(halley)
+NEO 433 (Eros) has a diameter of 16.840 km and is not potentially hazardous.
+```
+
+In the above, `{fullname}` is either `{designation} ({name})` if the `name` exists or simply `{designation}` otherwise. As a hint, this is a great opportunity for a property named `fullname`!
+
+
 """
 from helpers import cd_to_datetime, datetime_to_str
 
@@ -34,27 +56,36 @@ class NearEarthObject:
     """
     # TODO: How can you, and should you, change the arguments to this constructor?
     # If you make changes, be sure to update the comments in this file.
-    def __init__(self, **info):
-        """Create a new `NearEarthObject`.
-        
+    def __init__(self, designation, name = None, diameter = float('nan'), hazardous = False):
 
-        :param info: A dictionary of excess keyword arguments supplied to the constructor.
+        """Create a new `NearEarthObject`.
+
+        :param designation: string [required]
+        :param name: string or None
+        :diameter designation: float
+        :param hazardous: boolean
+
         """
         # TODO: Assign information from the arguments passed to the constructor
         # onto attributes named `designation`, `name`, `diameter`, and `hazardous`.
         # You should coerce these values to their appropriate data type and
         # handle any edge cases, such as a empty name being represented by `None`
         # and a missing diameter being represented by `float('nan')`.
-        
-        self.designation = info.get('designation')
-        self.name = info.get('name', "(None)")
-        
+
+        if not designation:
+            raise TypeError("Missing designation")
+
+        else:
+            self.designation = designation
+
+        self.name = (name if name else None)
+
         try:
-            self.diameter = float ( info.get('diameter') )
+            self.diameter = float (diameter)
         except ValueError as error:
             self.diameter = None
             
-        self.hazardous = (info.get('hazardous', '') == 'Y')
+        self.hazardous = bool(hazardous)
 
         # Create an empty initial collection of linked approaches.
         self.approaches = []
@@ -65,15 +96,13 @@ class NearEarthObject:
     @property
     def fullname(self):
         """Return a representation of the full name of this NEO."""
-        # TODO: Use self.designation and self.name to build a fullname for this object.
-        return self.designation + "  " + self.name
+        pretty_print_name = self.name if self.name else "unnamed"
+        return f"{self.designation} ({pretty_print_name})"
 
     def __str__(self):
         """Return `str(self)`."""
-        # TODO: Use this object's attributes to return a human-readable string representation.
-        # The project instructions include one possibility. Peek at the __repr__
-        # method for examples of advanced string formatting.
-        return f"A NearEarthObject ... {self.name} "
+        pretty_print_hazardous = "is potentially hazardous" if self.hazardous else "is not potentially hazardous"
+        return f"A NearEarthObject: {self.fullname!r} which has diameter {self.diameter:.3f}au and {pretty_print_hazardous}"
 
     def __repr__(self):
         """Return `repr(self)`, a computer-readable string representation of this object."""
@@ -82,7 +111,12 @@ class NearEarthObject:
                 
     @staticmethod
     def fromData(line):
-        return NearEarthObject(designation = line['pdes'], name = line['name'], diameter = line['diameter'], hazardous = line['pha'])
+        pha = line.get('pha', '').upper()
+        designation = line.get('pdes', '')
+        name = line.get('name', None)
+        diameter = line.get('diameter', float('nan'))
+        hazardous = (pha == "Y")
+        return NearEarthObject(designation = designation, name = name, diameter = diameter, hazardous = hazardous)
 
 
 class CloseApproach:
@@ -100,20 +134,29 @@ class CloseApproach:
     """
     # TODO: How can you, and should you, change the arguments to this constructor?
     # If you make changes, be sure to update the comments in this file.
-    def __init__(self, **info):
+    def __init__(self, designation, time, distance, velocity):
         """Create a new `CloseApproach`.
 
-        :param info: A dictionary of excess keyword arguments supplied to the constructor.
+        :param designation: designation (string)
+        :param time: time (float)
+        :param distance: distance (float)
+        :param velocity: velocity (float)
+
         """
         # TODO: Assign information from the arguments passed to the constructor
         # onto attributes named `_designation`, `time`, `distance`, and `velocity`.
         # You should coerce these values to their appropriate data type and handle any edge cases.
         # The `cd_to_datetime` function will be useful.
-        
-        self._designation = info.get('designation')
-        self.time = cd_to_datetime(info.get('cd'))
-        self.distance = float(info.get('dist'))
-        self.velocity = float(info.get('v_rel'))
+
+        if not designation:
+            raise TypeError("Missing designation")
+
+        else:
+            self.designation = designation
+
+        self.time = time if isinstance(time, datetime) else datetime(time)
+        self.distance = float(distance)
+        self.velocity = float(velocity)
 
         # Create an attribute for the referenced NEO, originally None.
         self.neo = None
@@ -131,21 +174,18 @@ class CloseApproach:
         formatted string that can be used in human-readable representations and
         in serialization to CSV and JSON files.
         """
-        # TODO: Use this object's `.time` attribute and the `datetime_to_str` function to
-        # build a formatted representation of the approach time.
-        # TODO: Use self.designation and self.name to build a fullname for this object.
-        return ''
-        
-    @property
-    def designation(self):
-        return self._designation
+
+        return datetime_to_str(self.time)
+
         
     def __str__(self):
         """Return `str(self)`."""
         # TODO: Use this object's attributes to return a human-readable string representation.
         # The project instructions include one possibility. Peek at the __repr__
         # method for examples of advanced string formatting.
-        return f"A CloseApproach ..."
+        pretty_print_neo = self.neo.fullname if self.neo else "unknown"
+        pretty_print_hazardous = "hazardous" if (self.neo and self.neo.hazardous) else "non-hazardous"
+        return f"A {pretty_print_hazardous} CloseApproach of the object {pretty_print_neo} at time {self.time}, at a closest approach distance of {self.distance:.2f}au and a velocity of {self.velocity:.2f}km/s"
 
     def __repr__(self):
         """Return `repr(self)`, a computer-readable string representation of this object."""
@@ -154,5 +194,5 @@ class CloseApproach:
                 
                 
     @staticmethod
-    def fromData(line):
-        return CloseApproach(designation = line[0], cd = line[3], dist = line[4], v_rel = line[7])
+    def fromData(data):
+        return CloseApproach(designation = data[0], time = cd_to_datetime(data[3]), distance = float(data[4]), velocity = float(data[7]))

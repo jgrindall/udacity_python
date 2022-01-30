@@ -58,4 +58,4 @@ def load_approaches(cad_json_path):
             approaches.append(approach)
     
     print("Loaded")
-    return approaches[:2500]
+    return approaches

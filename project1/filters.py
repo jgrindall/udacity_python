@@ -74,67 +74,42 @@ class AttributeFilter:
     def __repr__(self):
         return f"{self.__class__.__name__}(op=operator.{self.op.__name__}, value={self.value})"
 
-
-
-class MatchDateFilter(AttributeFilter):
-    def __init__(self, value):
-        super().__init__(operator.eq, value)
-    
-    @classmethod
-    def get(cls, approach):
-        #print('match date get', str(approach), approach.time)
-        return approach.time.date()
-        
-class BeforeDateFilter(AttributeFilter):
-    def __init__(self, value):
-        super().__init__(operator.le, value)
+class DateFilter(AttributeFilter):
+    def __init__(self, op, value):
+        super().__init__(op, value)
         
     @classmethod
     def get(cls, approach):
-        #print('match date get', str(approach), approach.time)
+        #print('date get', str(approach), approach.time)
+        #convert to pure date to match on the day, ignoring the time
         return approach.time.date()
 
-
-
-class AfterDateFilter(AttributeFilter):
-    def __init__(self, value):
-        super().__init__(operator.ge, value)
+class DistFilter(AttributeFilter):
+    def __init__(self, op, value):
+        super().__init__(op, value)
         
     @classmethod
     def get(cls, approach):
-        #print('match date get', str(approach), approach.time)
-        return approach.time.date()
-
-
-        
-class ApproachDistFilter(AttributeFilter):
-    def __init__(self, value):
-        super().__init__(operator.ge, value)
-        
-    @classmethod
-    def get(cls, approach):
-        #print('match date get', str(approach), approach.time)
-        return approach.time.date()
-
+        #print('dist get', str(approach), approach.distance)
+        return approach.distance
 
 class ApproachVelocityFilter(AttributeFilter):
-    def __init__(self, value):
-        super().__init__(operator.ge, value)
+    def __init__(self, op, value):
+        super().__init__(op, value)
         
     @classmethod
     def get(cls, approach):
-        #print('match date get', str(approach), approach.time)
-        return approach.time.date()
-
+        #print('vel get', str(approach), approach.velocity)
+        return approach.velocity
 
 class DiameterFilter(AttributeFilter):
-    def __init__(self, value):
-        super().__init__(operator.ge, value)
+    def __init__(self, op, value):
+        super().__init__(op, value)
         
     @classmethod
     def get(cls, approach):
-        #print('match date get', str(approach), approach.time)
-        return approach.time.date()
+        #print('diam', str(approach), approach.neo.diameter)
+        return approach.neo.diameter
 
 class HazardousFilter(AttributeFilter):
     def __init__(self, value):
@@ -142,14 +117,8 @@ class HazardousFilter(AttributeFilter):
         
     @classmethod
     def get(cls, approach):
-        #print('match date get', str(approach), approach.time)
-        return approach.time.date()
-        
-        
-Approaches Earth at a distance of at least (or at most) X astrononical units.
-Approaches Earth at a relative velocity of at least (or at most) Y kilometers per second.
-Has a diameter that is at least as large as (or at least as small as) Z kilometers.
-Is marked by NASA as potentially hazardous (or not).
+        #print('hazardous get', str(approach), approach.hazardous)
+        return approach.neo.hazardous
 
 
 def create_filters(date=None, start_date=None, end_date=None,
@@ -186,14 +155,29 @@ def create_filters(date=None, start_date=None, end_date=None,
     :param hazardous: Whether the NEO of a matching `CloseApproach` is potentially hazardous.
     :return: A collection of filters for use with `query`.
     """
-    # TODO: Decide how you will represent your filters.
+
     filters = [ ]
     
-    print(date, type(date))
-    
     if date:
-        filter = MatchDateFilter(date)
-        filters.append(filter)
+        filters.append(DateFilter(operator.eq, date))
+    if start_date:
+        filters.append(DateFilter(operator.ge, start_date))
+    if end_date:
+        filters.append(DateFilter(operator.le, end_date))
+    if distance_min:
+        filters.append(DistFilter(operator.ge, distance_min))
+    if distance_max:
+        filters.append(DistFilter(operator.le, distance_max))
+    if velocity_min:
+        filters.append(ApproachVelocityFilter(operator.ge, velocity_min))
+    if velocity_max:
+        filters.append(ApproachVelocityFilter(operator.le, velocity_max))
+    if diameter_min:
+        filters.append(DiameterFilter(operator.ge, diameter_min))
+    if diameter_max:
+        filters.append(DiameterFilter(operator.le, diameter_max))
+    if hazardous == True or hazardous == False:
+        filters.append(HazardousFilter(hazardous))
     return filters
 
 
@@ -207,4 +191,14 @@ def limit(iterator, n=None):
     :yield: The first (at most) `n` values from the iterator.
     """
     # TODO: Produce at most `n` values from the given iterator.
-    return iterator
+
+    if n == 0 or n == None:
+        return list(iterator)
+    else:
+        for _ in range(n):
+            try:
+                item = next(iterator)
+                yield item
+            except StopIteration:
+                 break
+
